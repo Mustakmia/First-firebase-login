@@ -1,14 +1,19 @@
 import {
-  GoogleAuthProvider, GithubAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword
+  GoogleAuthProvider, GithubAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile
 } from "firebase/auth";
+import initializeAuthentication from './Firebase/firebase.init';
 import { useState } from "react";
 import './App.css';
-import initializeAuthentication from './Firebase/firebase.init';
+
+
+
+
 initializeAuthentication();
 const googleProvider = new GoogleAuthProvider();
 initializeAuthentication();
 const gitHubProvider = new GithubAuthProvider();
 function App() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -55,6 +60,9 @@ function App() {
   const toggleLogin = e => {
     setIsLogin(e.target.checked);
   }
+  const handleNameChange = e => {
+    setName(e.target.value);
+  }
   const handleEmailChange = e => {
     setEmail(e.target.value);
   }
@@ -86,20 +94,39 @@ function App() {
         .then(result => {
           const user = result.user;
           console.log(user);
+          setError('');
         })
         .catch(error => {
           setError(error.message);
         })
     }
     const creatNewUser = (email, password) => {
-      createUserWithEmailAndPassword = (auth, email, password)
+      createUserWithEmailAndPassword(auth, email, password)
         .then(result => {
           const user = result.user;
           console.log(user);
           setError('');
+          verifyEmail();
+          setUserName();
         })
         .catch(error => {
           setError(error.message);
+
+        })
+    }
+    const setUserName = () => {
+      updateProfile(auth.currentUser, { displayName: name })
+        .then(result => { })
+    }
+    const verifyEmail = () => {
+      sendEmailVerification(auth.currentUser)
+        .then(result => {
+          console.log(result);
+        })
+    }
+    const handleResetPassword = () => {
+      sendPasswordResetEmail(auth, email)
+        .then(result => {
 
         })
     }
@@ -110,6 +137,12 @@ function App() {
             <h2>Please{isLogin ? 'Login' : 'Register'}</h2>
             <form onSubmit={handleRegistration}>
               <div className="row mb-3">
+                {!isLogin &&
+                  <div class="col-12">
+                    <label htmlFor="inputAddress" className="form-label">Your Name</label>
+                    <input onBlur={handleNameChange} type="text" className="form-control" id="inputAddress" placeholder="Your Name" />
+                  </div>
+                }
                 <label htmlFor="inputEmail3" className="col-sm-2 col-form-label">Email</label>
                 <div className="col-sm-10">
                   <input onChange={handleEmailChange} type="email" className="form-control" id="inputEmail3" />
@@ -127,7 +160,11 @@ function App() {
               </div>
               <div className="row mb-3">{error}</div>
               <button type="submit" className="btn btn-primary">Please{isLogin ? 'Login' : 'Register'}</button>
+              <button onClick={handleResetPassword} type="button" className="btn btn-info btn-sm">Reset Password</button>
             </form>
+
+
+
             <br />
             <br />
             <br />
